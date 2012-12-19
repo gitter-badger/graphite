@@ -1,3 +1,0 @@
-#!/bin/sh
-exec 2>&1
-exec chpst -u graphite -l /opt/graphite/webapp/webapp.lock -- bash -c 'source /opt/graphite/.venv/bin/activate && cd /opt/graphite/webapp/graphite && /opt/graphite/.venv/bin/gunicorn_django -b 0.0.0.0:8080'

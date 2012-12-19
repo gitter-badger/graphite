@@ -1,8 +1,0 @@
-<% node[:graphite][:schema].each do |(name, options)| %>
-[<%= name.to_s %>]
- <% unless options[:priority].nil? %>
-priority = <%= options[:priority] %>
- <% end %>
-pattern = <%= options[:pattern] %>
-retentions = <%= options[:retentions] %>
-<% end %>

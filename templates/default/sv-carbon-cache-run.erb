@@ -1,3 +1,0 @@
-#!/bin/sh
-exec 2>&1
-exec chpst -u graphite -l /opt/graphite/storage/carbon-cache.lock -- bash -c 'source /opt/graphite/.venv/bin/activate && /opt/graphite/bin/carbon-cache.py --debug start'
