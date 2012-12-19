@@ -9,7 +9,7 @@
 
 carbon_cache "sample" do
   action [:install,:config,:start]
-  cpu_affinity "2"
+  cpu_affinity "1"
 end
 
 carbon_relay "sample" do

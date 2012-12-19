@@ -28,6 +28,11 @@ action :install do
       action :install
     end
   end
+  package "libcairo2-dev"
+  python_pip "http://cairographics.org/releases/py2cairo-1.8.10.tar.gz" do
+    virtualenv new_resource.graphite_home
+  action :install
+end
   new_resource.updated_by_last_action(true)
 end
 action :config do
@@ -43,7 +48,7 @@ action :config do
     source new_resource.local_settings_template
     owner new_resource.user
     group new_resource.group
-    cookbook new_resource.template_cookbook
+    cookbook new_resource.cookbook
     variables({
                 :debug => new_resource.debug,
                 :time_zone => new_resource.time_zone,
@@ -68,7 +73,7 @@ action :config do
     source new_resource.initial_data_template
     owner new_resource.user
     group new_resource.group
-    cookbook new_resource.template_cookbook
+    cookbook new_resource.cookbook
     mode 0655
   end
   execute "syncdb" do
@@ -82,6 +87,7 @@ action :config do
   when "upstart"
     template "/etc/init/graphite-web.conf" do
       source new_resource.web_template
+      cookbook new_resource.cookbook
       owner "root"
       group "root"
       mode 0644
@@ -93,7 +99,8 @@ action :config do
                   :listen_address => new_resource.listen_address,
                   :cpu_affinity => new_resource.cpu_affinity,
                   :user => new_resource.user,
-                  :group => new_resource.group
+                  :group => new_resource.group,
+                  :graphite_home => new_resource.graphite_home
                 })
     end
   else

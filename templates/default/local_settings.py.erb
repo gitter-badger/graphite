@@ -1,29 +1,35 @@
 # Edit this file to override the default graphite settings, do not edit settings.py!!!
 
 # Turn on debugging and restart apache if you ever see an "Internal Server Error" page
-#DEBUG = True
+DEBUG = <%= @debug %>
 
 # Set your local timezone (django will *try* to figure this out automatically)
 # If your graphs appear to be offset by a couple hours then this probably
 # needs to be explicitly set to your local timezone.
-TIME_ZONE = 'UTC'
+TIME_ZONE = '<%= @time_zone %>'
 
 # Uncomment these to enable more performance-related logging
-#LOG_RENDERING_PERFORMANCE = True
-#LOG_CACHE_PERFORMANCE = True
+LOG_RENDERING_PERFORMANCE = <%= @log_rendering_performance %>
+LOG_CACHE_PERFORMANCE = <%= @log_cache_performance %>
 
+<% if @documentation_url.empty? %>
+<% else %>
 # Override this if you need to provide documentation specific to your graphite deployment
-#DOCUMENTATION_URL = "http://wiki.mycompany.com/graphite"
+DOCUMENTATION_URL = "<%= @documentation_url %>"
+<% end %>
 
+<% if @smtp_server.empty? %>
+<% else %>
 # Enable email-related features
-#SMTP_SERVER = "mail.mycompany.com"
-
+SMTP_SERVER = "<%= @smtp_server %>"
+<% end %>
 
 #####################################
 # LDAP Authentication Configuration #
 #####################################
 # LDAP / ActiveDirectory authentication setup
-#USE_LDAP_AUTH = True
+<% if @use_ldap_auth === "True" %>
+USE_LDAP_AUTH = <%= @use_ldap_auth %>
 #LDAP_SERVER = "ldap.mycompany.com"
 #LDAP_PORT = 389
 #          OR
@@ -43,8 +49,10 @@ TIME_ZONE = 'UTC'
 #ldap.set_option(ldap.OPT_X_TLS_CERTFILE, "/etc/ssl/mycert.pem")
 #ldap.set_option(ldap.OPT_X_TLS_KEYFILE, "/etc/ssl/mykey.pem")
 # See http://www.python-ldap.org/ for further details on these options.
+<% end %>
 
-
+<% if @database_engine.empty? %>
+<% else %>
 ##########################
 # Database Configuration #
 ##########################
@@ -56,14 +64,16 @@ TIME_ZONE = 'UTC'
 #
 # DON'T FORGET TO RUN 'manage.py syncdb' AFTER SETTING UP A NEW DB!
 #
-#DATABASE_ENGINE = 'mysql' # or 'postgres'
-#DATABASE_NAME = 'graphite'
-#DATABASE_USER = 'graphite'
-#DATABASE_PASSWORD = 'graphite-is-awesome'
-#DATABASE_HOST = 'mysql.mycompany.com'
-#DATABASE_PORT = '3306'
+DATABASE_ENGINE = <%= @database_engine %>
+DATABASE_NAME = '<%= @database[:name] %>'
+DATABASE_USER = '<%= @database[:user] %>'
+DATABASE_PASSWORD = '<%= @database[:password] %>'
+DATABASE_HOST = '<%= @database[:host] %>'
+DATABASE_PORT = '<%= @database[:port] %>'
+<% end %>
 
-
+<% if @cluster_servers.empty? %>
+<% else %>
 #########################
 # Cluster Configuration #
 #########################
@@ -73,8 +83,11 @@ TIME_ZONE = 'UTC'
 # Strings are of the form "ip[:port]"
 # Usually this will be the same as MEMCACHE_HOSTS except for the port numbers.
 #
-#CLUSTER_SERVERS = []
+CLUSTER_SERVERS = <%= @cluster_servers %>
+<% end %>
 
+<% if @memcache_hosts.empty? %>
+<% else %>
 # This lists all the memcached servers that will be used by this webapp.
 # If you have a cluster of webapps you want to make sure all of them
 # have the *exact* same value for this setting. That will maximize cache
@@ -84,12 +97,16 @@ TIME_ZONE = 'UTC'
 # You should not use the loopback address 127.0.0.1 here because every webapp in
 # the cluster should use the exact same value and should list every member in the
 # cluster.
-#MEMCACHE_HOSTS = ['10.10.10.10:11211', '10.10.10.11:11211', '10.10.10.12:11211']
+MEMCACHE_HOSTS = <%= @memcache_hosts %>
+<% end %>
 
+<% if @carbonlink_hosts.empty? %>
+<% else %>
 # If you are running multiple carbon-caches on this machine (typically behind a relay using
 # consistent hashing), you'll need to list the ip address, cache query port, and instance name of each carbon-cache
 # instance on the local machine (NOT every carbon-cache in the entire cluster). The default cache query port is 7002
 # and a common scheme is to use 7102 for instance b, 7202 for instance c, etc.
 #
 # You *should* use 127.0.0.1 here.
-#CARBONLINK_HOSTS = ["127.0.0.1:7002:a", "127.0.0.1:7102:b", "127.0.0.1:7202:c"]
+CARBONLINK_HOSTS = <%= @carbonlink_hosts %>
+<% end %>

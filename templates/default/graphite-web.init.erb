@@ -11,9 +11,9 @@ respawn
 setuid <%= @user %>
 setgid <%= @group %>
 
-chdir <%= @graphite_home %>
+chdir <%= @graphite_home %>/webapp/graphite
 <% if @cpu_affinity %>
-exec /usr/bin/taskset -c <%= @cpu_affinity %> <%= @graphite_home %>/bin/gunicorn_django -b <%= @listen_address %>:<%= @listen_port %> --workers <%= @workers %> --backlog=<%= @backlog %> --timeout=<%= @timeout %> --graceful-timeout=<%= @timeout %>
+exec /usr/bin/taskset -c <%= @cpu_affinity %> <%= @graphite_home %>/bin/gunicorn_django -b <%= @listen_address %>:<%= @listen_port %> -D --workers <%= @workers %> --backlog=<%= @backlog %> --timeout=<%= @timeout %> --graceful-timeout=<%= @timeout %>
 <% else %>
-exec <%= @graphite_home %>/bin/python <%= @graphite_home %>/bin/gunicorn_django -b <%= @listen_address %>:<%= @listen_port %> --workers <%= @workers %> --backlog=<%= @backlog %> --timeout=<%= @timeout %> --graceful-timeout=<%= @timeout %>
+exec <%= @graphite_home %>/bin/python <%= @graphite_home %>/bin/gunicorn_django -b <%= @listen_address %>:<%= @listen_port %> -D --workers <%= @workers %> --backlog=<%= @backlog %> --timeout=<%= @timeout %> --graceful-timeout=<%= @timeout %>
 <% end %>
