@@ -80,20 +80,20 @@ go" => "1.3", "django-tagging" => "0.3.1", "simplejson" => "2.1.6", "Twisted" =>
 Usage
 ============
 
-    cd chef-repo/cookbooks
-    git submodule add git://github.com/damm/carbon.git
-    git submodule add git://github.com/damm/graphite.git
-    COOKBOOK=graphite_infra rake new_cookbook
+```cd chef-repo/cookbooks```  
+```git submodule add git://github.com/damm/carbon.git```  
+```git submodule add git://github.com/damm/graphite.git```  
+```COOKBOOK=graphite_infra rake new_cookbook```  
 
 * The cookbook named ``graphite_infra`` must depend on the *graphite* cookbook.
 
-    graphite_web "my_graphite" do
-      action [:install,:config,:start]
-    end
+```graphite_web "my_graphite" do  ```  
+```  action [:install,:config,:start]```   
+```end```
 
 License and Author
 ==================
-Author:: Scott M. Likens [[mailto:scott@spam.likens.us][<scott@likens.us>]]
+Author:: Scott M. Likens <scott@spam.likens.us>
 
 Copyright 2012, Scott M. Likens
 
