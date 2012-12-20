@@ -79,10 +79,10 @@ action :config do
   execute "syncdb" do
     command new_resource.graphite_home + "/bin/django-admin.py syncdb --settings=graphite.settings --noinput --pythonpath=webapp"
     cwd new_resource.graphite_home
-    not_if { node['graphite']['initial_data_loaded'] == "true" }
+   # not_if { node['graphite']['initial_data_loaded'] == true }
   end
-  node.set['graphite']['initial_data_loaded'] = "true"
-  node.save unless Chef::Config[:solo]
+#  node.set['graphite']['initial_data_loaded'] = true
+#  node.save unless Chef::Config[:solo]
   case new_resource.init_style
   when "upstart"
     template "/etc/init/graphite-web.conf" do
