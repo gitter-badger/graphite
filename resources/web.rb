@@ -11,7 +11,7 @@ attribute :timeout, :kind_of => Fixnum, :default => 300
 attribute :backlog, :kind_of => Fixnum, :default => 655355
 attribute :listen_port, :kind_of => Fixnum, :default => 8080
 attribute :listen_address, :kind_of => String, :default => "0.0.0.0"
-attribute :cpu_affinity, :kind_of => String
+attribute :cpu_affinity
 attribute :local_settings_template, :kind_of => String, :default => "local_settings.py.erb"
 attribute :web_template, :kind_of => String, :default => "graphite-web.init.erb"
 attribute :graphite_home, :kind_of => String, :default => "/opt/graphite"
@@ -32,7 +32,7 @@ attribute :memcache_hosts, :kind_of => String, :default => String.new
 attribute :rendering_hosts, :kind_of => String, :default => String.new
 attribute :remote_rendering, :kind_of => String, :default => "False"
 attribute :standard_dirs, :kind_of => String, :default => String.new
-attribute :carbonlink_hosts, :kind_of => String, :default => String.new
+attribute :carbonlink_hosts, :kind_of => Array, :default => Array.new
 
 def initialize(*args)
   super
