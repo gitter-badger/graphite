@@ -32,15 +32,15 @@ This recipe should do the following:
 Usage
 ==================
 
-    ec2-run-instances ami-fd20ad94 -t hi1.4xlarge -k smlikens --block-device-mapping=sdb=ephemeral0 --block-device-mapping=sdc=ephemeral1 --block-device-mapping=sdd=ephemeral2 --block-device-mapping=sde=ephemeral3
+    ec2-run-instances ami-fd20ad94 -t hi1.4xlarge -k opensshkey --block-device-mapping=sdb=ephemeral0 --block-device-mapping=sdc=ephemeral1 --block-device-mapping=sdd=ephemeral2 --block-device-mapping=sde=ephemeral3
 
 * Wait for it to come up, then bootstrap it with this recipe.
 
-    knife bootstrap  -r "role[graphite_recovery]" -N graphite_recovery --environment ops $ip
+    knife bootstrap  -r "recipe[graphite_recovery::default]" -N graphite_recovery --environment ops $ip
 
 License and Author
 ==================
-Author:: Scott M. Likens <scott@mopub.com>
+Author:: Scott M. Likens <scott@likens.us>
 
 Copyright 2012, Scott M. Likens
 
