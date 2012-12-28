@@ -108,5 +108,5 @@ MEMCACHE_HOSTS = <%= @memcache_hosts %>
 # and a common scheme is to use 7102 for instance b, 7202 for instance c, etc.
 #
 # You *should* use 127.0.0.1 here.
-CARBONLINK_HOSTS = <%= @carbonlink_hosts %>
+CARBONLINK_HOSTS = [<%= @carbonlink_hosts.join(", ") %>]
 <% end %>
