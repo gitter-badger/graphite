@@ -64,7 +64,7 @@ USE_LDAP_AUTH = <%= @use_ldap_auth %>
 #
 # DON'T FORGET TO RUN 'manage.py syncdb' AFTER SETTING UP A NEW DB!
 #
-DATABASE_ENGINE = <%= @database_engine %>
+DATABASE_ENGINE = '<%= @database_engine %>'
 DATABASE_NAME = '<%= @database[:name] %>'
 DATABASE_USER = '<%= @database[:user] %>'
 DATABASE_PASSWORD = '<%= @database[:password] %>'
