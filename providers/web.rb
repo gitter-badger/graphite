@@ -35,7 +35,7 @@ action :install do
 end
   new_resource.updated_by_last_action(true)
 end
-action :config do
+action :create do
   directory new_resource.graphite_home + "/storage/log/webapp" do
     action :create
     recursive true
@@ -107,6 +107,7 @@ action :config do
     log "not implemented"
     fatal
   end
+  node.set[new_resource.name]=new_resource
   new_resource.updated_by_last_action(true)
 end
 action :start do

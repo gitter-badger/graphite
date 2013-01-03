@@ -1,4 +1,4 @@
-actions :config,:install,:start,:stop
+actions :create,:install,:start,:stop
 
 attribute :initial_data_template, :kind_of => String, :default => "initial_data.json.erb"
 attribute :python_interpreter, :kind_of => String, :default => "python2.7"
