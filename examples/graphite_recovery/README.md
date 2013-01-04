@@ -13,7 +13,7 @@ Requirements
 3. [Python](http://github.com/opscode-cookbooks/python/)
   Provides virtualenv support and the pip provider
 
-+ Requires an postgresql database serve to host the schema.  SQLite3 does not scale.
++  postgresql database serve to host the schema.  SQLite3 does not scale.
 
 Recipes
 ============
