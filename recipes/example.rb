@@ -7,15 +7,20 @@
 #
 
 
-carbon_cache "sample" do
+carbon_cache "carbon_cache" do
   action [:install,:config,:start]
   cpu_affinity "1"
 end
 
-carbon_relay "sample" do
+carbon_relay "carbon_relay" do
   action [:config,:start]
 end
 
-graphite_web "sample" do
-  action [:install,:config,:start]
+cookbook_file "/opt/graphite/conf/graphTemplates.conf" do
+  source "graphTemplates.conf"
+  owner "graphite"
+  group "graphite"
+end
+graphite_web "graphite_web" do
+  action [:git,:create,:start]
 end

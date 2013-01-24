@@ -1,3 +1,59 @@
+action :git do
+  group new_resource.group do
+    action :create
+  end
+  user new_resource.user do
+    group new_resource.group
+    shell "/bin/bash"
+    home new_resource.graphite_home
+    supports :manage_home => true
+  end
+  directory new_resource.graphite_home do
+    owner new_resource.user
+    group new_resource.group
+    mode 0755
+    recursive true
+    action :create
+  end
+  python_virtualenv new_resource.graphite_home do
+    interpreter new_resource.python_interpreter
+    owner new_resource.user
+    group new_resource.group
+    action :create
+  end
+  graphite_core_packages = new_resource.graphite_core_packages.collect do |pkg,ver|
+    python_pip pkg do 
+      version ver
+      virtualenv new_resource.graphite_home
+      action :install
+    end
+  end
+  graphite_stable_packages = new_resource.graphite_stable_packages.collect do |pkg,ver|
+    git "/var/tmp/#{pkg}" do
+    repository new_resource.graphite_stable_git_uri
+    reference ver
+    action :checkout
+      not_if { ::File.exists?(new_resource.graphite_home + "/webapp/graphite/version/__init__.py") }
+    end
+    script "install #{pkg} in virtualenv #{new_resource.graphite_home}" do
+      user "root"
+      cwd "/var/tmp/#{pkg}"
+      interpreter "bash"
+      environment("VIRTUAL_ENV" => new_resource.graphite_home)
+      code <<-EOH
+      python setup.py install
+      EOH
+      not_if { ::File.exists?(new_resource.graphite_home + "/webapp/graphite-web/version/__init__.py") }
+    end 
+  end
+  package "libcairo2-dev"
+  python_pip "http://cairographics.org/releases/py2cairo-1.8.10.tar.gz" do
+    virtualenv new_resource.graphite_home
+    action :install
+  end
+  new_resource.updated_by_last_action(true)
+end
+
 action :install do
   group new_resource.group do
     action :create
@@ -20,6 +76,13 @@ action :install do
     owner new_resource.user
     group new_resource.group
     action :create
+  end
+  graphite_core_packages = new_resource.graphite_core_packages.collect do |pkg,ver|
+    python_pip pkg do
+      version ver
+      virtualenv new_resource.graphite_home
+      action :install
+    end
   end
   graphite_packages = new_resource.graphite_packages.collect do |pkg,ver|
     python_pip pkg do
@@ -79,7 +142,7 @@ action :create do
   execute "syncdb" do
     command new_resource.graphite_home + "/bin/django-admin.py syncdb --settings=graphite.settings --noinput --pythonpath=webapp"
     cwd new_resource.graphite_home
-   # not_if { node['graphite']['initial_data_loaded'] == true }
+    # not_if { node['graphite']['initial_data_loaded'] == true }
   end
 #  node.set['graphite']['initial_data_loaded'] = true
 #  node.save unless Chef::Config[:solo]
