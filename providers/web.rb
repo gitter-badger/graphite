@@ -30,20 +30,21 @@ action :git do
   end
   graphite_stable_packages = new_resource.graphite_stable_packages.collect do |pkg,ver|
     git "/var/tmp/#{pkg}" do
-    repository new_resource.graphite_stable_git_uri
-    reference ver
-    action :checkout
+      user "graphite"
+      repository new_resource.graphite_stable_git_uri
+      reference ver
+      action :checkout
       not_if { ::File.exists?(new_resource.graphite_home + "/webapp/graphite/version/__init__.py") }
     end
     script "install #{pkg} in virtualenv #{new_resource.graphite_home}" do
-      user "root"
+      user "graphite"
       cwd "/var/tmp/#{pkg}"
       interpreter "bash"
       environment("VIRTUAL_ENV" => new_resource.graphite_home)
       code <<-EOH
       python setup.py install
       EOH
-      not_if { ::File.exists?(new_resource.graphite_home + "/webapp/graphite-web/version/__init__.py") }
+      not_if { ::File.exists?(new_resource.graphite_home + "/webapp/graphite/version/__init__.py") }
     end 
   end
   package "libcairo2-dev"
@@ -146,6 +147,10 @@ action :create do
   end
 #  node.set['graphite']['initial_data_loaded'] = true
 #  node.save unless Chef::Config[:solo]
+  node.set[new_resource.name]=new_resource.to_hash
+  new_resource.updated_by_last_action(true)
+end
+action :start do
   case new_resource.init_style
   when "upstart"
     template "/etc/init/graphite-web.conf" do
@@ -166,19 +171,34 @@ action :create do
                   :graphite_home => new_resource.graphite_home
                 })
     end
-  else
-    log "not implemented"
-    fatal
-  end
-  node.set[new_resource.name]=new_resource.to_hash
-  new_resource.updated_by_last_action(true)
-end
-action :start do
-  case new_resource.init_style
-  when "upstart"
     service "graphite-web" do
       provider Chef::Provider::Service::Upstart
       action [:enable,:start]
+    end
+  when "runit"
+    #FIXME: Oh my gosh this is grotesque, we should be able to fix it once https://github.com/opscode-cookbooks/runit/pull/11/commits is merged.
+    workers = new_resource.workers
+    backlog = new_resource.backlog
+    timeout = new_resource.timeout
+    listen_port = new_resource.listen_port
+    listen_address = new_resource.listen_address
+    cpu_affinity = new_resource.cpu_affinity
+    user = new_resource.user
+    group = new_resource.group
+    graphite_home = new_resource.graphite_home
+    runit_service "graphite-web" do
+      options({
+                :workers => workers,
+                :backlog => backlog,
+                :timeout => timeout,
+                :listen_port => listen_port,
+                :listen_address => listen_address,
+                :cpu_affinity => cpu_affinity,
+                :user => user,
+                :group => group,
+                :graphite_home => graphite_home
+              }.merge(params)
+              )
     end
   end
   new_resource.updated_by_last_action(true)
@@ -190,9 +210,15 @@ action :stop do
       provider Chef::Provider::Service::Upstart
       action [:stop,:disable]
     end
-  else
-    log "not supported"
-    fatal
+  when "runit"
+    script "stop graphite" do
+      interpreter "bash" 
+      code <<-EOH
+sv stop graphite-web
+EOH
+    end
+    else
+    raise "we should not be here"
   end
   new_resource.updated_by_last_action(true)
 end
