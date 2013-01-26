@@ -24,32 +24,39 @@ action :git do
   graphite_core_packages = new_resource.graphite_core_packages.collect do |pkg,ver|
     python_pip pkg do 
       version ver
+      user new_resource.user
       virtualenv new_resource.graphite_home
       action :install
     end
   end
   graphite_stable_packages = new_resource.graphite_stable_packages.collect do |pkg,ver|
     git "/var/tmp/#{pkg}" do
-      user "graphite"
-      repository new_resource.graphite_stable_git_uri
+      user new_resource.user
+      repository new_resource.graphite_stable_base_git_uri + pkg + ".git"
       reference ver
       action :checkout
-      not_if { ::File.exists?(new_resource.graphite_home + "/webapp/graphite/version/__init__.py") }
+    end
+    file "/opt/graphite/.#{pkg}" do
+      action :nothing
     end
     script "install #{pkg} in virtualenv #{new_resource.graphite_home}" do
-      user "graphite"
+      user new_resource.user
       cwd "/var/tmp/#{pkg}"
       interpreter "bash"
-      environment("VIRTUAL_ENV" => new_resource.graphite_home)
+      environment("VIRTUAL_ENV" => new_resource.graphite_home,
+                  "PATH" => new_resource.graphite_home + "/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
       code <<-EOH
       python setup.py install
       EOH
-      not_if { ::File.exists?(new_resource.graphite_home + "/webapp/graphite/version/__init__.py") }
+      notifies :touch, resources(:file => "/opt/graphite/.#{pkg}"),:immediate
+      not_if { ::File.exists?("/opt/graphite/.#{pkg}") }
+# new_resource.graphite_home + "/lib/python2.7/site-packages/#{pkg}.py") || ::File.exists?(new_resource.graphite_home + "/webapp/graphite/version/__init__.py") }
     end 
   end
   package "libcairo2-dev"
   python_pip "http://cairographics.org/releases/py2cairo-1.8.10.tar.gz" do
     virtualenv new_resource.graphite_home
+    user new_resource.user
     action :install
   end
   new_resource.updated_by_last_action(true)
@@ -140,13 +147,16 @@ action :create do
     cookbook new_resource.cookbook
     mode 0655
   end
-  execute "syncdb" do
-    command new_resource.graphite_home + "/bin/django-admin.py syncdb --settings=graphite.settings --noinput --pythonpath=webapp"
-    cwd new_resource.graphite_home
-    # not_if { node['graphite']['initial_data_loaded'] == true }
+  file new_resource.graphite_home + ".syncdb" do
+    action :nothing
   end
-#  node.set['graphite']['initial_data_loaded'] = true
-#  node.save unless Chef::Config[:solo]
+  execute "syncdb" do
+    notifies :touch, resources(:file => new_resource.graphite_home + ".syncdb"),:immediate
+    command new_resource.graphite_home + "/bin/django-admin.py syncdb --settings=graphite.settings --noinput --pythonpath=webapp"
+    user new_resource.user
+    cwd new_resource.graphite_home
+    not_if { ::File.exists?(new_resource.graphite_home + ".syncdb") }
+  end
   node.set[new_resource.name]=new_resource.to_hash
   new_resource.updated_by_last_action(true)
 end
@@ -176,28 +186,18 @@ action :start do
       action [:enable,:start]
     end
   when "runit"
-    #FIXME: Oh my gosh this is grotesque, we should be able to fix it once https://github.com/opscode-cookbooks/runit/pull/11/commits is merged.
-    workers = new_resource.workers
-    backlog = new_resource.backlog
-    timeout = new_resource.timeout
-    listen_port = new_resource.listen_port
-    listen_address = new_resource.listen_address
-    cpu_affinity = new_resource.cpu_affinity
-    user = new_resource.user
-    group = new_resource.group
-    graphite_home = new_resource.graphite_home
     runit_service "graphite-web" do
       options({
-                :workers => workers,
-                :backlog => backlog,
-                :timeout => timeout,
-                :listen_port => listen_port,
-                :listen_address => listen_address,
-                :cpu_affinity => cpu_affinity,
-                :user => user,
-                :group => group,
-                :graphite_home => graphite_home
-              }.merge(params)
+                :workers => new_resource.workers,
+                :backlog => new_resource.backlog,
+                :timeout => new_resource.timeout,
+                :listen_port => new_resource.listen_port,
+                :listen_address => new_resource.listen_address,
+                :cpu_affinity => new_resource.cpu_affinity,
+                :user => new_resource.user,
+                :group => new_resource.group,
+                :graphite_home => new_resource.graphite_home
+              }
               )
     end
   end

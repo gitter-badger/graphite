@@ -17,8 +17,8 @@ attribute :web_template, :kind_of => String, :default => "graphite-web.init.erb"
 attribute :graphite_home, :kind_of => String, :default => "/opt/graphite"
 attribute :graphite_core_packages, :kind_of => Hash, :default => { "gunicorn" => "0.16.1", "Django" => "1.3", "django-tagging" => "0.3.1", "simplejson" => "2.1.6", "Twisted" => "11.0.0", "python-memcached" => "1.47", "txAMQP" => "0.4", "pytz" => "2012b", "django-tagging" => "0.3.1" }
 attribute :graphite_packages, :kind_of => Hash, :default => { "graphite-web" => "0.9.10" }
-attribute :graphite_stable_packages, :kind_of => Hash, :default => { "graphite-web" => "0.9.x" }
-attribute :graphite_stable_git_uri, :kind_of => String, :default => "https://github.com/graphite-project/graphite-web.git"
+attribute :graphite_stable_packages, :kind_of => Hash, :default => { "graphite-web" => "0.9.x", "whisper" => "0.9.x" }
+attribute :graphite_stable_base_git_uri, :kind_of => String, :default => "https://github.com/graphite-project/"
 attribute :debug, :kind_of => String, :default => "False"
 attribute :time_zone, :kind_of => String, :default => "UTC"
 attribute :log_rendering_performance, :kind_of => String, :default => "False"
@@ -40,5 +40,5 @@ attribute :carbonlink_hosts, :kind_of => Array, :default => Array.new
 def initialize(*args)
   super
   @action = :nothing
-  @run_context.include_recipe ["build-essential","python","python::pip","python::virtualenv","git"]
+  @run_context.include_recipe ["build-essential","python","python::pip","python::virtualenv","git","runit::default"]
 end

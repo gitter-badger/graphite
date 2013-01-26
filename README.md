@@ -14,7 +14,9 @@ Requirements
   Pull requests accepted to support other init styles
 3. [Python](http://github.com/opscode-cookbooks/python/)
   Provides virtualenv support and the pip provider
-  
+4. [Runit](http://github.com/opscode-cookbooks/runit/)
+  Minimum version of 0.16.3
+
 Recipes
 ============
 
@@ -22,6 +24,11 @@ default.rb
 ----------
 
 The default recipe does absolutely nothing.  It is not intended to do anything 
+
+example.rb
+----------
+
+Outdated example of using carbon/graphite with upstart.  Will update shortly to be right.
 
 Resources and Providers
 =======================
@@ -36,12 +43,15 @@ Installs and Configured [Graphite Web](https://github.com/graphite-project/graph
 Actions:
 
 * `install` - installs graphite-web
-* `config` - configures graphite-web
+* `create` - configures graphite-web
 * `start` - starts the graphite-web service
 * `stop` - stops the graphite-web service
+* `git` - install graphite-web from *stable sources*
 
 Attribute Parameters:
 
+* `graphite_stable_base_git_uri` - String - default - `https://github.com/graphite-project/`
+* `graphite_stable_packages` - Hash - default - `{ "graphite-web" => "0.9.x", "whisper" => "0.9.x" }`
 * `initial_data_template` - String - default -  `initial_data.json.erb`
 * `python_interpreter` - String - default - `python2.7`
 * `init_style` - String - default `upstart`
