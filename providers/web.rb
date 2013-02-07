@@ -48,7 +48,7 @@ action :git do
       code <<-EOH
       python setup.py install
       EOH
-      notifies :touch, resources(:file => "/opt/graphite/.#{pkg}"),:immediate
+      notifies :touch, "file[/opt/graphite/." + pkg + "]"),:immediate
       not_if { ::File.exists?("/opt/graphite/.#{pkg}") }
 # new_resource.graphite_home + "/lib/python2.7/site-packages/#{pkg}.py") || ::File.exists?(new_resource.graphite_home + "/webapp/graphite/version/__init__.py") }
     end 
@@ -114,7 +114,6 @@ action :create do
     group new_resource.group
     mode 0755
   end
-
   template new_resource.graphite_home + "/webapp/graphite/local_settings.py" do
     source new_resource.local_settings_template
     owner new_resource.user
@@ -139,7 +138,6 @@ action :create do
               })
     mode 0655
   end
-
   template new_resource.graphite_home + "/webapp/graphite/initial_data.json" do
     source new_resource.initial_data_template
     owner new_resource.user
@@ -150,8 +148,8 @@ action :create do
   file new_resource.graphite_home + ".syncdb" do
     action :nothing
   end
-  execute "syncdb" do
-    notifies :touch, resources(:file => new_resource.graphite_home + ".syncdb"),:immediate
+  execute "syncdb_" + new_resource.name do
+    notifies :touch, "file[" + new_resource.graphite_home + ".syncdb"),:immediate
     command new_resource.graphite_home + "/bin/django-admin.py syncdb --settings=graphite.settings --noinput --pythonpath=webapp"
     user new_resource.user
     cwd new_resource.graphite_home
