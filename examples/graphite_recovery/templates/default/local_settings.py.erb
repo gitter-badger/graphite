@@ -64,7 +64,7 @@ USE_LDAP_AUTH = <%= @use_ldap_auth %>
 #
 # DON'T FORGET TO RUN 'manage.py syncdb' AFTER SETTING UP A NEW DB!
 #
-DATABASE_ENGINE = <%= @database_engine %>
+DATABASE_ENGINE = '<%= @database_engine %>'
 DATABASE_NAME = '<%= @database[:name] %>'
 DATABASE_USER = '<%= @database[:user] %>'
 DATABASE_PASSWORD = '<%= @database[:password] %>'
@@ -108,5 +108,5 @@ MEMCACHE_HOSTS = <%= @memcache_hosts %>
 # and a common scheme is to use 7102 for instance b, 7202 for instance c, etc.
 #
 # You *should* use 127.0.0.1 here.
-CARBONLINK_HOSTS = <%= @carbonlink_hosts.to_a %>
+CARBONLINK_HOSTS = [<%= @carbonlink_hosts.join(", ") %>]
 <% end %>

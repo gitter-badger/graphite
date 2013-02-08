@@ -12,8 +12,12 @@ Requirements
   Pull requests accepted to support other init styles
 3. [Python](http://github.com/opscode-cookbooks/python/)
   Provides virtualenv support and the pip provider
+4. [Postgresql](http://github.com/opscode-cookbooks/postgresql/)
+  Datastore for Graphite.
+5. [Database](http://github.com/opscode-cookbooks/database/)
+  To be able to create the graphite database via Chef.
 
-+  postgresql database serve to host the schema.  SQLite3 does not scale.
++ postgresql database serve to host the schema.  SQLite3 does not scale.
 
 Recipes
 ============
@@ -32,17 +36,23 @@ This recipe should do the following:
 Usage
 ==================
 
-    ec2-run-instances ami-fd20ad94 -t hi1.4xlarge -k opensshkey --block-device-mapping=sdb=ephemeral0 --block-device-mapping=sdc=ephemeral1 --block-device-mapping=sdd=ephemeral2 --block-device-mapping=sde=ephemeral3
+* First bootstrap a postgresql recipe, currently the node name is hard coded so copy and paste this.
+
+    knife ec2 server create -I ami-fd20ad94 --flavor m1.large -G default -x ubuntu -N graphite_recovery_postgres -Z us-east-1d -S yourkey -r 'role[postgresql_server]'
+
+* Once that is done, now start an hi1.4xlarge to host our carbon-cache/relay/etc
+
+    ec2-run-instances ami-fd20ad94 -t hi1.4xlarge -k smlikens --block-device-mapping=sdb=ephemeral0 --block-device-mapping=sdc=ephemeral1 --block-device-mapping=sdd=ephemeral2 --block-device-mapping=sde=ephemeral3
 
 * Wait for it to come up, then bootstrap it with this recipe.
 
-    knife bootstrap  -r "recipe[graphite_recovery::default]" -N graphite_recovery --environment ops $ip
+    knife bootstrap  -r "recipe[graphite_recovery]" -N graphite_recovery --environment ops $ip
 
 License and Author
 ==================
 Author:: Scott M. Likens <scott@likens.us>
 
-Copyright 2012, Scott M. Likens
+Copyright 2013, Scott M. Likens
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
