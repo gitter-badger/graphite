@@ -48,7 +48,7 @@ action :git do
       code <<-EOH
       python setup.py install
       EOH
-      notifies :touch, "file[/opt/graphite/." + pkg + "]"),:immediate
+      notifies :touch, "file[/opt/graphite/." + pkg + "]",:immediately
       not_if { ::File.exists?("/opt/graphite/.#{pkg}") }
 # new_resource.graphite_home + "/lib/python2.7/site-packages/#{pkg}.py") || ::File.exists?(new_resource.graphite_home + "/webapp/graphite/version/__init__.py") }
     end 
@@ -149,7 +149,7 @@ action :create do
     action :nothing
   end
   execute "syncdb_" + new_resource.name do
-    notifies :touch, "file[" + new_resource.graphite_home + ".syncdb"),:immediate
+    notifies :touch, "file[" + new_resource.graphite_home + ".syncdb]",:immediate
     command new_resource.graphite_home + "/bin/django-admin.py syncdb --settings=graphite.settings --noinput --pythonpath=webapp"
     user new_resource.user
     cwd new_resource.graphite_home
@@ -185,6 +185,7 @@ action :start do
     end
   when "runit"
     runit_service "graphite-web" do
+      cookbook new_resource.cookbook
       options({
                 :workers => new_resource.workers,
                 :backlog => new_resource.backlog,
