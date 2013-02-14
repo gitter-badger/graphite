@@ -9,6 +9,7 @@ attribute :group, :kind_of => String, :default => "graphite"
 attribute :workers, :kind_of => String, :default => "1"
 attribute :timeout, :kind_of => Fixnum, :default => 300
 attribute :backlog, :kind_of => Fixnum, :default => 655355
+attribute :limit_request_line, :kind_of => Fixnum, :default => 0
 attribute :listen_port, :kind_of => Fixnum, :default => 8080
 attribute :listen_address, :kind_of => String, :default => "0.0.0.0"
 attribute :cpu_affinity
