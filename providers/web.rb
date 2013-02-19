@@ -50,7 +50,6 @@ action :git do
       EOH
       notifies :touch, "file[/opt/graphite/." + pkg + "]",:immediately
       not_if { ::File.exists?("/opt/graphite/.#{pkg}") }
-# new_resource.graphite_home + "/lib/python2.7/site-packages/#{pkg}.py") || ::File.exists?(new_resource.graphite_home + "/webapp/graphite/version/__init__.py") }
     end 
   end
   package "libcairo2-dev"
@@ -58,6 +57,7 @@ action :git do
     virtualenv new_resource.graphite_home
     user new_resource.user
     action :install
+    not_if { ::File.directory?("#{new_resource.graphite_home}/lib/python2.7/site-packages/pycairo-1.8.10-py2.7.egg-info") }
   end
   new_resource.updated_by_last_action(true)
 end

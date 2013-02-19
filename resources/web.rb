@@ -16,7 +16,7 @@ attribute :cpu_affinity
 attribute :local_settings_template, :kind_of => String, :default => "local_settings.py.erb"
 attribute :web_template, :kind_of => String, :default => "graphite-web.init.erb"
 attribute :graphite_home, :kind_of => String, :default => "/opt/graphite"
-attribute :graphite_core_packages, :kind_of => Hash, :default => { "gunicorn" => "0.16.1", "Django" => "1.3", "django-tagging" => "0.3.1", "simplejson" => "2.1.6", "Twisted" => "11.0.0", "python-memcached" => "1.47", "txAMQP" => "0.4", "pytz" => "2012b", "django-tagging" => "0.3.1" }
+attribute :graphite_core_packages, :kind_of => Hash, :default => { "gunicorn" => "0.16.1", "Django" => "1.3", "django-tagging" => "0.3.1", "simplejson" => "2.1.6", "Twisted" => "11.1.0", "python-memcached" => "1.47", "txAMQP" => "0.4", "pytz" => "2012b", "django-tagging" => "0.3.1" }
 attribute :graphite_packages, :kind_of => Hash, :default => { "graphite-web" => "0.9.10" }
 attribute :graphite_stable_packages, :kind_of => Hash, :default => { "graphite-web" => "0.9.x", "whisper" => "0.9.x" }
 attribute :graphite_stable_base_git_uri, :kind_of => String, :default => "https://github.com/graphite-project/"
