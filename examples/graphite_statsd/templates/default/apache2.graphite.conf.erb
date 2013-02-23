@@ -1,0 +1,22 @@
+<VirtualHost *:80>
+  ServerAdmin <%= @serveradmin %>
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, OPTIONS"
+Header set Access-Control-Allow-Headers "origin, authorization, accept"
+ProxyTimeout <%= @timeout %>
+  <Proxy balancer://graphite>
+<% @balancermember.each do |bm| %>
+  BalancerMember http://<%= bm %>
+<% end %>
+  ProxySet maxattempts=<%= @maxattempts %> timeout=<%= @timeout %>
+  Order deny,allow
+  Allow from all
+  </Proxy>
+  RewriteEngine On
+  RewriteCond %{DOCUMENT_ROOT}/%{REQUEST_FILENAME} !-f
+  RewriteRule ^/(.*)$ balancer://graphite%{REQUEST_URI} [P,QSA,L]
+  ErrorLog /var/log/apache2/error.log 
+  LogLevel warn
+  CustomLog /var/log/apache2/graphite.log combined
+  ServerSignature Off
+</VirtualHost>

@@ -1,14 +1,20 @@
 #
-# Cookbook Name:: graphite_collectd
+# Cookbook Name:: graphite_statsd
 # Recipe:: default
 #
 # Copyright 2013, Scott M. Likens
 #
 #
-
-carbon_install "stable" do
-  action :git
+group "graphite" do
+  action :create
 end
+user "graphite" do
+  group "graphite"
+  shell "/bin/bash"
+  home "/opt/graphite"
+  supports :manage_home => true
+end
+
 
 if node.has_key?("ec2")
   chef_gem "di-ruby-lvm" do
@@ -27,12 +33,20 @@ if node.has_key?("ec2")
       stripes 2
       action :create
     end
-    execute "chown /opt/graphite/storage back to graphite:graphite" do
-      command "chown -R graphite:graphite /opt/storage/graphite"
+    execute "correct the permissions on /opt/graphite/storage" do
+      command "chown -R graphite:graphite /opt/graphite/storage"
     end
   end
 else
-package "lvm2"
+  package "lvm2"
+end
+
+directory "/opt/graphite" do
+  owner "graphite"
+  group "graphite"
+  mode 0755
+  recursive true
+  action :create
 end
 
 include_recipe "graphite::pg"
@@ -43,8 +57,8 @@ line_receiver_port = 3001
 # Start port of the pickle receiver
 pickle_receiver_port = 3101
 # Relay line receiver start
-relay_line_receiver_port = 2031
-relay_pickle_receiver_port = 2041
+relay_line_receiver_port = 2013
+relay_pickle_receiver_port = 2014
 # When using CPU Affinity, we should let it know what the starting cpu is.  If you have other cpu's used by other resources, bump accordingly.
 cpu = 0
 # destionations array
@@ -52,23 +66,6 @@ dst = []
 # carbon query port array
 cqp = []
 dstplus = []
-
-group "graphite" do
-  action :create
-end
-user "graphite" do
-  group "graphite"
-  shell "/bin/bash"
-  home "/opt/graphite"
-  supports :manage_home => true
-end
-directory "/opt/graphite" do
-  owner "graphite"
-  group "graphite"
-  mode 0755
-  recursive true
-  action :create
-end
 
 carbon_install "stable" do
   action :git
@@ -96,21 +93,17 @@ end
   end
 end
 
-("a".."c").each do |cr|
-  carbon_relay "carbon_relay-" + cr do
+  carbon_relay "carbon_relay-a" do
     relay_rules({ "default" => { "default" => "true", "destinations" => dstplus, "continue" => String.new, "pattern" => String.new } })
     line_listner({"line_receiver_interface" => "0.0.0.0", "line_receiver_port" => relay_line_receiver_port })
     pickle_listner({"pickle_receiver_interface" => "0.0.0.0", "pickle_receiver_port" => relay_pickle_receiver_port})
     destinations dstplus
-    relay_instance cr
+    relay_instance "a"
     cpu_affinity cpu
     init_style "runit"
     cpu+= 1
-    relay_pickle_receiver_port+= 1
-    relay_line_receiver_port+= 1
     action [:create,:start]
   end
-end
 
 cookbook_file "/opt/graphite/conf/graphTemplates.conf" do
   source "graphTemplates.conf"
@@ -154,39 +147,6 @@ graphite_web "graphite-web" do
   cpu_affinity "13-24"
   debug "True"
   database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname, :port => 5432 })
-end
-
-package "hatop"
-
-haproxy_source_file = "haproxy_1.5-dev17-1ubuntu1_#{node['kernel']['machine'] =~ /x86_64/ ? "amd64" : "i386"}.deb"
-remote_file Chef::Config[:file_cache_path] + "/" + haproxy_source_file do
-  source "https://mopub-debs.s3.amazonaws.com/haproxy/#{node['platform_version']}/#{node['kernel']['machine'] =~ /x86_64/ ? "amd64" : "i386"}/#{haproxy_source_file}"
-  not_if { ::File.exists?(Chef::Config[:file_cache_path] + haproxy_source_file) }
-end
-
-package "haproxy" do
-  source Chef::Config[:file_cache_path] + "/" + haproxy_source_file
-  provider Chef::Provider::Package::Dpkg
-  action :install
-  not_if { File.exists?("/usr/sbin/haproxy") }
-end
-template "/etc/default/haproxy" do
-  source "haproxy-default.erb"
-  owner "root"
-  group "root"
-  mode 0644
-  cookbook "haproxy_lwrp"
-end
-listen_temp=Array.new  
-
-listen_temp << { "name" => "carbon-relay-plain 0.0.0.0:2003", "mode" => "tcp", "server" => ["127.0.0.1"], "start_port" => 2031, "instance_count" => 3}
-listen_temp << { "name" => "carbon-relay-pickle 0.0.0.0:2004", "mode" => "tcp", "server" => ["127.0.0.1"], "start_port" => 2041, "instance_count" => 3}
-
-haproxy_lwrp_lb "haproxy" do
-  global({"maxconn" => 65535, "ulimit-n" => 160000, "user" => "haproxy", "group" => "haproxy", "stats" => "socket /var/run/haproxy.sock mode 0600 level admin user root" })
-  defaults({ "log" => "global", "mode" => "http", "option" => "dontlognull", "balance" => "leastconn", "srvtimeout" => 60000, "contimeout" => 5000, "retries" => 3,"option" => "redispatch\noption contstats"})
-  listen(listen_temp)
-  action :create
 end
 
 apache_module "proxy" 
