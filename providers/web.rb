@@ -149,7 +149,7 @@ action :create do
     action :nothing
   end
   execute "syncdb_" + new_resource.name do
-    notifies :touch, "file[" + new_resource.graphite_home + ".syncdb]",:immediate
+    notifies :touch, "file[" + new_resource.graphite_home + ".syncdb]",:delayed
     command new_resource.graphite_home + "/bin/django-admin.py syncdb --settings=graphite.settings --noinput --pythonpath=webapp"
     user new_resource.user
     cwd new_resource.graphite_home
