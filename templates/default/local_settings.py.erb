@@ -83,7 +83,11 @@ DATABASE_PORT = '<%= @database[:port] %>'
 # Strings are of the form "ip[:port]"
 # Usually this will be the same as MEMCACHE_HOSTS except for the port numbers.
 #
+  <% if @cluster_servers.count > 2 %>
+CLUSTER_SERVERS = <%= @cluster_servers.join(", ") %>
+  <% else %>
 CLUSTER_SERVERS = <%= @cluster_servers %>
+  <% end %>
 <% end %>
 
 <% if @memcache_hosts.empty? %>

@@ -31,7 +31,7 @@ attribute :use_ldap_auth, :kind_of => String, :default => String.new
 attribute :database_engine, :kind_of => String, :default => String.new
 # "postgresql_psycopg2"
 attribute :database, :kind_of => Hash, :default => { :name => 'graphite', :user => 'graphite', :password => String.new, :host => String.new, :port => 5432 }
-attribute :cluster_servers, :kind_of => String, :default => String.new
+attribute :cluster_servers
 attribute :memcache_hosts, :kind_of => String, :default => String.new
 attribute :rendering_hosts, :kind_of => String, :default => String.new
 attribute :remote_rendering, :kind_of => String, :default => "False"
