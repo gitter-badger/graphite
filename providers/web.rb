@@ -137,7 +137,7 @@ action :create do
                 :carbonlink_hosts => new_resource.carbonlink_hosts
               })
     mode 0655
-  end
+  end 
   template new_resource.graphite_home + "/webapp/graphite/initial_data.json" do
     source new_resource.initial_data_template
     owner new_resource.user
