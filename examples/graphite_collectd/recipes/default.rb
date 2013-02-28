@@ -5,9 +5,21 @@
 # Copyright 2013, Scott M. Likens
 #
 #
-
-carbon_install "stable" do
-  action :git
+group "graphite" do
+  action :create
+end
+user "graphite" do
+  group "graphite"
+  shell "/bin/bash"
+  home "/opt/graphite"
+  supports :manage_home => true
+end
+directory "/opt/graphite" do
+  owner "graphite"
+  group "graphite"
+  mode 0755
+  recursive true
+  action :create
 end
 
 if node.has_key?("ec2")
@@ -27,15 +39,19 @@ if node.has_key?("ec2")
       stripes 2
       action :create
     end
-    execute "chown /opt/graphite/storage back to graphite:graphite" do
-      command "chown -R graphite:graphite /opt/storage/graphite"
-    end
   end
 else
 package "lvm2"
 end
 
+# We want the pg gem, so we can cleanly use the database cookbook.
 include_recipe "graphite::pg"
+
+# install the carbon suite
+carbon_install "stable" do
+  action :git
+end
+
 # Start port of the cache query ports
 cache_query_port = 7000
 # Start port of the line receiver
@@ -53,22 +69,6 @@ dst = []
 cqp = []
 dstplus = []
 
-group "graphite" do
-  action :create
-end
-user "graphite" do
-  group "graphite"
-  shell "/bin/bash"
-  home "/opt/graphite"
-  supports :manage_home => true
-end
-directory "/opt/graphite" do
-  owner "graphite"
-  group "graphite"
-  mode 0755
-  recursive true
-  action :create
-end
 
 carbon_install "stable" do
   action :git
@@ -135,11 +135,17 @@ end
 postgres_server = search(:node, 'name:postgres_graphite').first
 
 postgresql_database "graphite" do
-  connection ({:host => postgres_server.ec2.public_hostname, :port => 5432, :username => 'postgres', :password => postgres_server.postgresql.password})
+  connection ({:host => postgres_server.ec2.public_hostname || postgres_server.hostname, :port => 5432, :username => 'postgres', :password => postgres_server.postgresql.password})
   action :create
 end
 
-graphite_web "graphite-web" do
+begin
+graphite_federated = search(:node, 'name:graphite_statsd').first
+rescue
+graphite_fedearted = nil
+end
+if graphite_federated.nil?
+  graphite_web "graphite-web" do
   action [:create,:start]
   init_style "runit"
   workers "24"
@@ -153,7 +159,28 @@ graphite_web "graphite-web" do
   carbonlink_hosts cqp
   cpu_affinity "13-24"
   debug "True"
-  database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname, :port => 5432 })
+  database_engine "postgresql_psycopg2"
+  database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname || postgres_server['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first, :port => 5432 })
+  end
+else
+  graphite_web "graphite-web" do
+  action [:create,:start]
+  init_style "runit"
+  workers "24"
+  backlog 65535
+  listen_port 8080
+  listen_address "0.0.0.0"
+  cpu_affinity 1
+  user "graphite"
+  group "graphite"
+  graphite_home "/opt/graphite"
+  carbonlink_hosts cqp
+  cpu_affinity "13-24"
+  debug "True"
+  database_engine "postgresql_psycopg2"
+  cluster_servers graphite_federated.ec2.public_hostname + ":8080" || node['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first + ":8080"
+  database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname || postgres_server['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first, :port => 5432 })
+  end
 end
 
 package "hatop"

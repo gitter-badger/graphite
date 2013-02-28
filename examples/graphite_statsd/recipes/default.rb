@@ -14,7 +14,13 @@ user "graphite" do
   home "/opt/graphite"
   supports :manage_home => true
 end
-
+directory "/opt/graphite" do
+  owner "graphite"
+  group "graphite"
+  mode 0755
+  recursive true
+  action :create
+end
 
 if node.has_key?("ec2")
   chef_gem "di-ruby-lvm" do
@@ -32,9 +38,6 @@ if node.has_key?("ec2")
       mount_point({ :location => '/opt/graphite/storage', :options => 'noatime,nodiratime' })
       stripes 2
       action :create
-    end
-    execute "correct the permissions on /opt/graphite/storage" do
-      command "chown -R graphite:graphite /opt/graphite/storage"
     end
   end
 else
@@ -66,6 +69,7 @@ dst = []
 # carbon query port array
 cqp = []
 dstplus = []
+cluster = []
 
 carbon_install "stable" do
   action :git
@@ -73,7 +77,7 @@ end
 
 ("a".."l").each do |ci|
   carbon_cache "carbon_cache-" + ci do
-  action [:create,:start]
+    action [:create,:start]
     init_style "runit"
     cpu_affinity cpu
     carbon_instance ci
@@ -86,24 +90,24 @@ end
     dst << ["127.0.0.1:#{pickle_receiver_port}"]
     cqp << ["\"127.0.0.1:#{cache_query_port}:#{ci}\""]
     dstplus << "127.0.0.1:#{pickle_receiver_port}:#{ci}"
-    cpu+= 1           
+    cpu+= 1
     cache_query_port+= 1
     line_receiver_port+= 1
     pickle_receiver_port+= 1
   end
 end
 
-  carbon_relay "carbon_relay-a" do
-    relay_rules({ "default" => { "default" => "true", "destinations" => dstplus, "continue" => String.new, "pattern" => String.new } })
-    line_listner({"line_receiver_interface" => "0.0.0.0", "line_receiver_port" => relay_line_receiver_port })
-    pickle_listner({"pickle_receiver_interface" => "0.0.0.0", "pickle_receiver_port" => relay_pickle_receiver_port})
-    destinations dstplus
-    relay_instance "a"
-    cpu_affinity cpu
-    init_style "runit"
-    cpu+= 1
-    action [:create,:start]
-  end
+carbon_relay "carbon_relay-a" do
+  relay_rules({ "default" => { "default" => "true", "destinations" => dstplus, "continue" => String.new, "pattern" => String.new } })
+  line_listner({"line_receiver_interface" => "0.0.0.0", "line_receiver_port" => relay_line_receiver_port })
+  pickle_listner({"pickle_receiver_interface" => "0.0.0.0", "pickle_receiver_port" => relay_pickle_receiver_port})
+  destinations dstplus
+  relay_instance "a"
+  cpu_affinity cpu
+  init_style "runit"
+  cpu+= 1
+  action [:create,:start]
+end
 
 cookbook_file "/opt/graphite/conf/graphTemplates.conf" do
   source "graphTemplates.conf"
@@ -132,24 +136,67 @@ postgresql_database "graphite" do
   action :create
 end
 
-graphite_web "graphite-web" do
-  action [:create,:start]
-  init_style "runit"
-  workers "24"
-  backlog 65535
-  listen_port 8080
-  listen_address "0.0.0.0"
-  cpu_affinity 1
-  user "graphite"
-  group "graphite"
-  graphite_home "/opt/graphite"
-  carbonlink_hosts cqp
-  cpu_affinity "13-24"
-  debug "True"
-  database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname, :port => 5432 })
+begin
+  graphite_federated = search(:node, 'name:graphite_collectd').first
+rescue
+    graphite_federated = nil
 end
 
-apache_module "proxy" 
+
+if graphite_federated.nil?
+log "graphite_federated is nil" do
+    level :debug
+end
+  graphite_web "graphite-web" do
+    action [:create,:start]
+    init_style "runit"
+    workers "24"
+    backlog 65535
+    listen_port 8080
+    listen_address "0.0.0.0"
+    cpu_affinity 1
+    user "graphite"
+    group "graphite"
+    graphite_home "/opt/graphite"
+    carbonlink_hosts cqp
+    cpu_affinity "13-24"
+    debug "True"
+    database_engine "postgresql_psycopg2"
+    database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname, :port => 5432 })
+  end
+else
+  if graphite_federated.has_key?("ec2") 
+    cluster << "#{graphite_federated.ec2.public_hostname}:8080"
+    log "cluster is #{graphite_federated.ec2.public_hostname}" do
+      level :debug
+    end
+  else
+    log "cluster is #{graphite_federated['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first}" do
+      level :debug
+    end
+    cluster << "#{graphite_federated['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first}:8080"
+  end
+  graphite_web "graphite-web" do
+    action [:create,:start]
+    init_style "runit"
+    workers "24"
+    backlog 65535
+    listen_port 8080
+    listen_address "0.0.0.0"
+    cpu_affinity 1
+    user "graphite"
+    group "graphite"
+    graphite_home "/opt/graphite"
+    carbonlink_hosts cqp
+    cpu_affinity "13-24"
+    debug "True"
+    database_engine "postgresql_psycopg2"
+    cluster_servers cluster
+    database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname, :port => 5432 })
+  end
+end
+
+apache_module "proxy"
 apache_module "proxy_http"
 apache_module "proxy_balancer"
 apache_module "headers"
@@ -170,4 +217,4 @@ end
 
 apache_site "graphite" do
   enable true
-end  
+end
