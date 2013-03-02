@@ -11,14 +11,14 @@ carbon_install "stable" do
 end
 
 carbon_cache "carbon-cache-a" do
-  action :create
-  storage_aggregation({:min => { :pattern => "\.min$", :xfilesfactor => "0.1", :aggregationmethod => "min" }, :max => { :pattern => "\.max$", :xfilesfactor => "0.1", :aggregationmethod => "max" }, :sum => { :pattern => "\.count$", :xfilesfactor => "0", :aggregationmethod => "sum" }, :default_average => { :pattern => ".*", :xfilesfactor => "0.5", :aggregationmethod => "average"}})
-end
-
-carbon_cache "carbon-cache" do
-  action :start
+  action [:create,:start]
   init_style "runit"
   cpu_affinity 1
+end
+
+
+graphite_web "graphite-web-stable" do
+  action :git
 end
 
 cookbook_file "/opt/graphite/conf/graphTemplates.conf" do
@@ -27,16 +27,9 @@ cookbook_file "/opt/graphite/conf/graphTemplates.conf" do
   group "graphite"
 end
 
-graphite_web "graphite-web-stable" do
-  action :git
-end
-
-graphite_web "graphite-ui" do
-  action :create
-end
 
 graphite_web "graphite-web" do
-  action :start
+  action [:create,:start]
   init_style "runit"
   workers "2"
   backlog 65535

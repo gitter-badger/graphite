@@ -5,7 +5,7 @@ license          "Apache 2.0"
 description      "Installs/Configures graphite"
 
 version          "0.0.6"
-depends "carbon", "0.1.0"
+depends "carbon"
 depends "git"
 depends "python"
 depends "graphite"
