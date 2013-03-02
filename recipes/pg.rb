@@ -27,12 +27,31 @@ rescue LoadError
   end.run_action(:run) if node['platform_family'] == "debian"
 
   node.set['build_essential']['compiletime'] = true
-  include_recipe "build-essential"
-  include_recipe "postgresql::client"
-  package "libpq-dev"
-  package "postgresql-client"
-  package "make"
-
+  a = execute "apt-get update" do
+    action :nothing
+  end
+  a.run_action(:run)
+  b = package "libpq-dev" do
+    action :nothing
+  end
+  b.run_action(:install)
+  c = package "postgresql-client-common" do
+    action :nothing
+  end
+  c.run_action(:install)
+  c = package "postgresql-client-9.1" do
+    action :nothing
+  end
+  c.run_action(:install)
+  d = package "build-essential" do
+    action :nothing
+  end
+  d.run_action(:install)
+  e = package "make" do 
+    action :nothing
+  end
+  e.run_action(:install)
+  
   begin
     chef_gem "pg"
   rescue Gem::Installer::ExtensionBuildError => e

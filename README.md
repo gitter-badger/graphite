@@ -79,12 +79,12 @@ go" => "1.3", "django-tagging" => "0.3.1", "simplejson" => "2.1.6", "Twisted" =>
 * `use_ldap_auth` - String - Not fully implemented, please use your own local_settings.py template if you require this behavior
 * `database_engine` - String - default *sqlite3*
 * `database` - Hash - default - `{ :name => 'graphite', :user => 'graphite', :password => String.new, :host => String.new, :port => 5432 }`
-* `cluster_servers` - String 
-* `memcache_hosts` - String
-* `rendering_hosts` - String
-* `remote_rendering` - String
+* `cluster_servers` - Array
+* `memcache_hosts` - Array
+* `rendering_hosts` - Array
+* `remote_rendering` - Aray
 * `standard_dirs` - String
-* `carbonlink_hosts` - String
+* `carbonlink_hosts` - Array
  
 
 Usage

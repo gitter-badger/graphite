@@ -72,6 +72,12 @@ DATABASE_HOST = '<%= @database[:host] %>'
 DATABASE_PORT = '<%= @database[:port] %>'
 <% end %>
 
+REMOTE_RENDERING = <%= @remote_rendering %>
+<% if @rendering_hosts.empty? %>
+<% else %>
+RENDERING_HOSTS = [<%= @rendering_hosts.join(", ") %>]
+<% end %>
+
 <% if @cluster_servers.empty? %>
 <% else %>
 #########################
@@ -83,11 +89,7 @@ DATABASE_PORT = '<%= @database[:port] %>'
 # Strings are of the form "ip[:port]"
 # Usually this will be the same as MEMCACHE_HOSTS except for the port numbers.
 #
-  <% if @cluster_servers.count > 2 %>
-CLUSTER_SERVERS = <%= @cluster_servers.join(", ") %>
-  <% else %>
-CLUSTER_SERVERS = <%= @cluster_servers %>
-  <% end %>
+CLUSTER_SERVERS = [<%= @cluster_servers.join(", ") %>]
 <% end %>
 
 <% if @memcache_hosts.empty? %>
@@ -101,7 +103,7 @@ CLUSTER_SERVERS = <%= @cluster_servers %>
 # You should not use the loopback address 127.0.0.1 here because every webapp in
 # the cluster should use the exact same value and should list every member in the
 # cluster.
-MEMCACHE_HOSTS = <%= @memcache_hosts %>
+MEMCACHE_HOSTS = [<%= @memcache_hosts.join(", ") %>]
 <% end %>
 
 <% if @carbonlink_hosts.empty? %>
