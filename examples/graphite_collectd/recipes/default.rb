@@ -41,7 +41,7 @@ if node.has_key?("ec2")
     end
   end
 else
-package "lvm2"
+  package "lvm2"
 end
 
 # We want the pg gem, so we can cleanly use the database cookbook.
@@ -68,7 +68,7 @@ dst = []
 # carbon query port array
 cqp = []
 dstplus = []
-
+render = []
 
 carbon_install "stable" do
   action :git
@@ -76,7 +76,7 @@ end
 
 ("a".."l").each do |ci|
   carbon_cache "carbon_cache-" + ci do
-  action [:create,:start]
+    action [:create,:start]
     init_style "runit"
     cpu_affinity cpu
     carbon_instance ci
@@ -89,7 +89,7 @@ end
     dst << ["127.0.0.1:#{pickle_receiver_port}"]
     cqp << ["\"127.0.0.1:#{cache_query_port}:#{ci}\""]
     dstplus << "127.0.0.1:#{pickle_receiver_port}:#{ci}"
-    cpu+= 1           
+    cpu+= 1
     cache_query_port+= 1
     line_receiver_port+= 1
     pickle_receiver_port+= 1
@@ -139,47 +139,68 @@ postgresql_database "graphite" do
   action :create
 end
 
-begin
-graphite_federated = search(:node, 'name:graphite_statsd').first
-rescue
-graphite_fedearted = nil
+
+graphite_federated = []
+render_hosts = []
+if Chef::Config[:solo]
+  Chef::Log.warn 'this portion of this cookbook requires search'
+else
+  search(:node, 'recipes:graphite_render\:\:default').collect do |host|
+    if host.has_key?("ec2")
+      render_hosts << ["\"#{host['ipaddress']}:8080\""]
+    else
+      render_hosts << ["\"#{host['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first}:8080\""]
+    end
+  end
+  search(:node, 'recipes:graphite_statsd\:\:default').collect do |host2|
+    if host2.has_key?("ec2")
+      graphite_federated << ["\"#{host2['ipaddress']}:8080\""]
+    else
+      graphite_federated << ["\"#{host2['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first}:8080\""]
+    end
+  end
 end
-if graphite_federated.nil?
+
+if graphite_federated.empty?
   graphite_web "graphite-web" do
-  action [:create,:start]
-  init_style "runit"
-  workers "24"
-  backlog 65535
-  listen_port 8080
-  listen_address "0.0.0.0"
-  cpu_affinity 1
-  user "graphite"
-  group "graphite"
-  graphite_home "/opt/graphite"
-  carbonlink_hosts cqp
-  cpu_affinity "13-24"
-  debug "True"
-  database_engine "postgresql_psycopg2"
-  database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname || postgres_server['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first, :port => 5432 })
+    action [:create,:start]
+    init_style "runit"
+    workers "24"
+    backlog 65535
+    listen_port 8080
+    listen_address "0.0.0.0"
+    cpu_affinity 1
+    user "graphite"
+    group "graphite"
+    graphite_home "/opt/graphite"
+    carbonlink_hosts cqp
+    cpu_affinity "13-24"
+    rendering_hosts render_hosts
+    remote_rendering "True"
+    debug "True"
+    database_engine "postgresql_psycopg2"
+    database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname || postgres_server['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first, :port => 5432 })
   end
 else
   graphite_web "graphite-web" do
-  action [:create,:start]
-  init_style "runit"
-  workers "24"
-  backlog 65535
-  listen_port 8080
-  listen_address "0.0.0.0"
-  cpu_affinity 1
-  user "graphite"
-  group "graphite"
-  graphite_home "/opt/graphite"
-  carbonlink_hosts cqp
-  cpu_affinity "13-24"
-  debug "True"
-  database_engine "postgresql_psycopg2"
-  cluster_servers graphite_federated.ec2.public_hostname + ":8080" || node['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first + ":8080"
-  database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname || postgres_server['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first, :port => 5432 })
+    action [:create,:start]
+    init_style "runit"
+    workers "24"
+    backlog 65535
+    listen_port 8080
+    listen_address "0.0.0.0"
+    cpu_affinity 1
+    user "graphite"
+    group "graphite"
+    graphite_home "/opt/graphite"
+    carbonlink_hosts cqp
+    cpu_affinity "13-24"
+    debug "True"
+    rendering_hosts render_hosts
+    remote_rendering "True"
+    database_engine "postgresql_psycopg2"
+    cluster_servers graphite_federated
+    database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname || postgres_server['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first, :port => 5432 })
   end
 end
 
@@ -204,7 +225,7 @@ template "/etc/default/haproxy" do
   mode 0644
   cookbook "haproxy_lwrp"
 end
-listen_temp=Array.new  
+listen_temp=Array.new
 
 listen_temp << { "name" => "carbon-relay-plain 0.0.0.0:2003", "mode" => "tcp", "server" => ["127.0.0.1"], "start_port" => 2031, "instance_count" => 3}
 listen_temp << { "name" => "carbon-relay-pickle 0.0.0.0:2004", "mode" => "tcp", "server" => ["127.0.0.1"], "start_port" => 2041, "instance_count" => 3}
@@ -216,7 +237,7 @@ haproxy_lwrp_lb "haproxy" do
   action :create
 end
 
-apache_module "proxy" 
+apache_module "proxy"
 apache_module "proxy_http"
 apache_module "proxy_balancer"
 apache_module "headers"
@@ -237,4 +258,4 @@ end
 
 apache_site "graphite" do
   enable true
-end  
+end

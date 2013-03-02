@@ -135,18 +135,28 @@ postgresql_database "graphite" do
   connection ({:host => postgres_server.ec2.public_hostname, :port => 5432, :username => 'postgres', :password => postgres_server.postgresql.password})
   action :create
 end
-
-begin
-  graphite_federated = search(:node, 'name:graphite_collectd').first
-rescue
-    graphite_federated = nil
+graphite_federated = []
+render_hosts = []
+if Chef::Config[:solo]
+  Chef::Log.warn 'this portion of this cookbook requires search'
+else
+  search(:node, 'recipes:graphite_render\:\:default').collect do |host|
+    if host.has_key?("ec2")
+      render_hosts << ["\"#{host['ipaddress']}:8080\""]
+    else
+      render_hosts << ["\"#{host['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first}:8080\""]
+    end
+  end
+  search(:node, 'recipes:graphite_collectd\:\:default').collect do |host2|
+    if host2.has_key?("ec2")
+      graphite_federated << ["\"#{host2['ipaddress']}:8080\""]
+    else
+      graphite_federated << ["\"#{host2['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first}:8080\""]
+    end
+  end
 end
 
-
-if graphite_federated.nil?
-log "graphite_federated is nil" do
-    level :debug
-end
+if graphite_federated.empty?
   graphite_web "graphite-web" do
     action [:create,:start]
     init_style "runit"
@@ -159,23 +169,14 @@ end
     group "graphite"
     graphite_home "/opt/graphite"
     carbonlink_hosts cqp
+    rendering_hosts render_hosts
+    remote_rendering "True"
     cpu_affinity "13-24"
     debug "True"
     database_engine "postgresql_psycopg2"
     database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname, :port => 5432 })
   end
 else
-  if graphite_federated.has_key?("ec2") 
-    cluster << "#{graphite_federated.ec2.public_hostname}:8080"
-    log "cluster is #{graphite_federated.ec2.public_hostname}" do
-      level :debug
-    end
-  else
-    log "cluster is #{graphite_federated['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first}" do
-      level :debug
-    end
-    cluster << "#{graphite_federated['network']['interfaces']['eth1']['addresses'].select {|address, data| data["family"] == "inet" }.keys.first}:8080"
-  end
   graphite_web "graphite-web" do
     action [:create,:start]
     init_style "runit"
@@ -190,8 +191,10 @@ else
     carbonlink_hosts cqp
     cpu_affinity "13-24"
     debug "True"
+    rendering_hosts render_hosts
+    remote_rendering "True"
     database_engine "postgresql_psycopg2"
-    cluster_servers cluster
+    cluster_servers graphite_federated
     database ({ :name => 'graphite', :user => 'postgres', :password => postgres_server.postgresql.password, :host => postgres_server.ec2.public_hostname, :port => 5432 })
   end
 end

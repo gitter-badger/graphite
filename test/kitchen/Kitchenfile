@@ -7,5 +7,5 @@ end
 cookbook "graphite" do
   configuration 'graphite'
   configuration 'carbonplus_graphite'
-  lint(:ignore => ["FC021"])
+  lint(:ignore => ["FC021","FC005"])
 end

@@ -17,18 +17,30 @@ Requirements
 4. [Runit](http://github.com/opscode-cookbooks/runit/)
   Minimum version of 0.16.3
 
-Recipes
+Usage
 ============
 
-default.rb
-----------
+There are 3 examples in the examples/ directory for your review.  Additionally there are examples in the test directory for simple examples.  
 
-The default recipe does absolutely nothing.  It is not intended to do anything 
+*Note* the examples below are not intended for usage on EC2 primarily.  Hosting a Metrics collector can require a massive amount of I/O depending on your schema.  It is possible to host an statsd collector on a *hi1.4xlarge* and this cookbook can do that.
 
-example.rb
-----------
+```shell ec2-run-instances ami-fd20ad94 -t hi1.4xlarge -k something --block-device-mapping=sdb=ephemeral0 --block-device-mapping=sdc=ephemeral1 --block-device-mapping=sdd=ephemeral2 --block-device-mapping=sde=ephemeral3```
 
-Outdated example of using carbon/graphite with upstart.  Will update shortly to be right.
+* examples/graphite_statsd/
+Host many carbon agents configured behind a single carbon-relay to be able to recieve and store metrics.  Configure apache on port 80 to provide [cors](http://www.html5rocks.com/en/tutorials/cors/).
+
+* examples/graphite_collectd/
+Host many carbon agents configured behind many carbon-relays able to recieve and store metrics.  Configure HAProxy to listen on the standard carbon-relay ports and load balance further.  Apache is configured on port 80 for *cors*.
+
+* examples/graphite_render/
+Our graphite servers have dual E5-2620 CPU's running at 2.0Ghz which can lead to slow down cairo.  We found that having a E3-1230v2 can get the data over the wire and generate the image and push it to your client faster than our graphite servers could generate that same image.  Configures graphite-web only to listen on 8080, no carbon-agents are configured.
+
+Benchmarks
+=======================
+
+1. graphite_statsd running on an Dual E5-2620 has been known to handle up to 1million metrics without dropping any metrics.
+2. graphite_collectd running on an Dual E5-2620 has been known to handle up to 3million metrics without dropping any metrics.
+  Using HAProxy is configured to have a connection timeout of 5000 which can lead to the tcp connection needing to be re-established every 83 minutes.
 
 Resources and Providers
 =======================
@@ -86,26 +98,22 @@ go" => "1.3", "django-tagging" => "0.3.1", "simplejson" => "2.1.6", "Twisted" =>
 * `standard_dirs` - String
 * `carbonlink_hosts` - Array
  
+Contributing
+------------
 
-Usage
-============
+1. Fork the repository on Github
+2. Create a named feature branch (like `add_component_x`)
+3. Write you change
+4. Write tests for your change (if applicable)
+5. Run the tests, ensuring they all pass
+6. Submit a Pull Request using Github
 
-```cd chef-repo/cookbooks```  
-```git submodule add git://github.com/damm/carbon.git```  
-```git submodule add git://github.com/damm/graphite.git```  
-```COOKBOOK=graphite_infra rake new_cookbook```  
-
-* The cookbook named ``graphite_infra`` must depend on the *graphite* cookbook.
-
-```graphite_web "my_graphite" do  ```  
-```  action [:install,:config,:start]```   
-```end```
 
 License and Author
 ==================
 Author:: Scott M. Likens <scott@spam.likens.us>
 
-Copyright 2012, Scott M. Likens
+Copyright 2013, Scott M. Likens
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
