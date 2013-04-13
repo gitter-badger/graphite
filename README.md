@@ -10,12 +10,10 @@ Requirements
 
 1. [carbon](http://github.com/damm/carbon/)
   Installs the **Carbon Cache** and **Carbon Relay** Services
-2. [Upstart](http://upstart.ubuntu.com/)
-  Pull requests accepted to support other init styles
 3. [Python](http://github.com/opscode-cookbooks/python/)
   Provides virtualenv support and the pip provider
-4. [Runit](http://github.com/opscode-cookbooks/runit/)
-  Minimum version of 0.16.3
+3. [Runit](http://github.com/opscode-cookbooks/runit/)
+  Minimum version of 1.0.6
 
 Usage
 ============

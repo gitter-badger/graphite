@@ -1,3 +1,5 @@
+use_inline_resources
+
 action :git do
   group new_resource.group do
     action :create
@@ -59,7 +61,6 @@ action :git do
     action :install
     not_if { ::File.directory?("#{new_resource.graphite_home}/lib/python2.7/site-packages/pycairo-1.8.10-py2.7.egg-info") }
   end
-  new_resource.updated_by_last_action(true)
 end
 
 action :install do
@@ -137,6 +138,7 @@ action :create do
                 :carbonlink_hosts => new_resource.carbonlink_hosts
               })
     mode 0655
+    notifies :restart, "runit_service[graphite-web]",:delayed
   end 
   template new_resource.graphite_home + "/webapp/graphite/initial_data.json" do
     source new_resource.initial_data_template
@@ -155,71 +157,21 @@ action :create do
     cwd new_resource.graphite_home
     not_if { ::File.exists?(new_resource.graphite_home + ".syncdb") }
   end
+  runit_service "graphite-web" do
+    cookbook new_resource.cookbook
+    options({
+              :workers => new_resource.workers,
+              :backlog => new_resource.backlog,
+              :timeout => new_resource.timeout,
+              :listen_port => new_resource.listen_port,
+              :limit_request_line => new_resource.limit_request_line,
+              :listen_address => new_resource.listen_address,
+              :cpu_affinity => new_resource.cpu_affinity,
+              :user => new_resource.user,
+              :group => new_resource.group,
+              :graphite_home => new_resource.graphite_home
+            }
+            )
+  end
   node.set[new_resource.name]=new_resource.to_hash
-  new_resource.updated_by_last_action(true)
-end
-action :start do
-  case new_resource.init_style
-  when "upstart"
-    template "/etc/init/graphite-web.conf" do
-      source new_resource.web_template
-      cookbook new_resource.cookbook
-      owner "root"
-      group "root"
-      mode 0644
-      variables({
-                  :workers => new_resource.workers,
-                  :backlog => new_resource.backlog,
-                  :timeout => new_resource.timeout,
-                  :listen_port => new_resource.listen_port,
-                  :limit_request_line => new_resource.limit_request_line,
-                  :listen_address => new_resource.listen_address,
-                  :cpu_affinity => new_resource.cpu_affinity,
-                  :user => new_resource.user,
-                  :group => new_resource.group,
-                  :graphite_home => new_resource.graphite_home
-                })
-    end
-    service "graphite-web" do
-      provider Chef::Provider::Service::Upstart
-      action [:enable,:start]
-    end
-  when "runit"
-    runit_service "graphite-web" do
-      cookbook new_resource.cookbook
-      options({
-                :workers => new_resource.workers,
-                :backlog => new_resource.backlog,
-                :timeout => new_resource.timeout,
-                :listen_port => new_resource.listen_port,
-                :limit_request_line => new_resource.limit_request_line,
-                :listen_address => new_resource.listen_address,
-                :cpu_affinity => new_resource.cpu_affinity,
-                :user => new_resource.user,
-                :group => new_resource.group,
-                :graphite_home => new_resource.graphite_home
-              }
-              )
-    end
-  end
-  new_resource.updated_by_last_action(true)
-end
-action :stop do
-  case new_resource.init_style
-  when "upstart"
-    service "graphite-web" do
-      provider Chef::Provider::Service::Upstart
-      action [:stop,:disable]
-    end
-  when "runit"
-    script "stop graphite" do
-      interpreter "bash" 
-      code <<-EOH
-sv stop graphite-web
-EOH
-    end
-    else
-    raise "we should not be here"
-  end
-  new_resource.updated_by_last_action(true)
 end

@@ -6,21 +6,18 @@
 #
 #
 
-group "graphite" do
-  action :create
+carbon_install "carbon_stable" do
+  action :git
 end
-user "graphite" do
-  group "graphite"
-  shell "/bin/bash"
-  home "/opt/graphite"
-  supports :manage_home => true
-end
-directory "/opt/graphite" do
-  owner "graphite"
-  group "graphite"
-  mode 0755
-  recursive true
+
+carbon_cache "carbon-cache-a" do
   action :create
+  init_style "runit"
+  cpu_affinity 1
+end
+
+graphite_web "graphite-web_stable" do
+  action :git
 end
 
 cookbook_file "/opt/graphite/conf/graphTemplates.conf" do
@@ -29,16 +26,9 @@ cookbook_file "/opt/graphite/conf/graphTemplates.conf" do
   group "graphite"
 end
 
-graphite_web "graphite-web-stable" do
-  action :git
-end
-
-graphite_web "graphite-ui" do
-  action :create
-end
 
 graphite_web "graphite-web" do
-  action :start
+  action :create
   init_style "runit"
   workers "2"
   backlog 65535
