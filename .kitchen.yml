@@ -17,4 +17,7 @@ suites:
   run_list: 
   - recipe[graphite::test_carbonplus_graphite]
   attributes: {}
+- name: example
+  run_list:
+  - recipe[graphite::example]
 
