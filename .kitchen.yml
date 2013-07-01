@@ -9,15 +9,18 @@ platforms:
   run_list:
   - recipe[apt]
 suites:
-- name: graphite_runit
+- name: graphite
   run_list: 
-  - recipe[graphite::test_graphite]
+  - recipe[minitest-handler]
+  - recipe[graphite_test::graphite]
   attributes: {}
-- name: carbonplusgraphite_runit
+- name: relayplus
   run_list: 
-  - recipe[graphite::test_carbonplus_graphite]
+  - recipe[minitest-handler]
+  - recipe[graphite_test::relayplus]
   attributes: {}
 - name: example
   run_list:
-  - recipe[graphite::example]
+  - recipe[minitest-handler]
+  - recipe[graphite_test::example]
 
