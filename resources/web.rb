@@ -6,7 +6,7 @@ attribute :init_style, :kind_of => String, :default => "upstart"
 attribute :cookbook, :kind_of => String, :default => "graphite"
 attribute :user, :kind_of => String, :default => "graphite"
 attribute :group, :kind_of => String, :default => "graphite"
-attribute :workers, :kind_of => String, :default => "1"
+attribute :workers, :kind_of => Fixnum, :default => 1
 attribute :timeout, :kind_of => Fixnum, :default => 300
 attribute :backlog, :kind_of => Fixnum, :default => 655355
 attribute :limit_request_line, :kind_of => Fixnum, :default => 0
@@ -26,16 +26,14 @@ attribute :log_rendering_performance, :kind_of => String, :default => "False"
 attribute :log_cache_performance, :kind_of => String, :default => "False"
 attribute :documentation_url, :kind_of => String, :default => String.new
 attribute :smtp_server, :kind_of => String, :default => String.new
-# FIXME: This should actually do something
 attribute :use_ldap_auth, :kind_of => String, :default => String.new
 attribute :database_engine, :kind_of => String, :default => String.new
-# "postgresql_psycopg2"
 attribute :database, :kind_of => Hash, :default => { :name => 'graphite', :user => 'graphite', :password => String.new, :host => String.new, :port => 5432 }
 attribute :cluster_servers, :kind_of => Array, :default => Array.new
 attribute :memcache_hosts, :kind_of => Array, :default => Array.new
 attribute :rendering_hosts, :kind_of => Array, :default => Array.new
 attribute :remote_rendering, :kind_of => String, :default => "False"
-attribute :standard_dirs, :kind_of => String, :default => String.new
+attribute :standard_dirs, :kind_of => Array, :default => Array.new
 attribute :carbonlink_hosts, :kind_of => Array, :default => Array.new
 
 def initialize(*args)

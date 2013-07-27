@@ -106,6 +106,10 @@ CLUSTER_SERVERS = [<%= @cluster_servers.join(", ") %>]
 MEMCACHE_HOSTS = [<%= @memcache_hosts.join(", ") %>]
 <% end %>
 
+<% if @standard_dirs.empty? %>
+  <% else %>
+STANDARD_DIRS = [<%= @standard_dirs.join(", ") %>]
+<% end %>
 <% if @carbonlink_hosts.empty? %>
 <% else %>
 # If you are running multiple carbon-caches on this machine (typically behind a relay using

@@ -68,7 +68,7 @@ Attribute Parameters:
 * `cookbook` - String - default - `graphite`
 * `user` - String - default - `graphite`
 * `group` - String - default - `graphite`
-* `workers` - String - default - `node[:cpu][:total].to_i`
+* `workers` - Fixnum - default - `1`
 * `timeout` - Fixnum - default - `300`
 * `backlog` - Fixnum - default - `655355`
 * `listen_port` - Fixnum, - default - `8080`

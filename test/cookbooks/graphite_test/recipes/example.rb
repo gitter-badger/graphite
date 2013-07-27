@@ -37,7 +37,7 @@ end
 graphite_web "graphite-web" do
   action :create
   init_style "runit"
-  workers "2"
+  workers 2
   backlog 65535
   listen_port 8080
   listen_address "0.0.0.0"
