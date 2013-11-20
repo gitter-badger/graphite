@@ -64,12 +64,16 @@ USE_LDAP_AUTH = <%= @use_ldap_auth %>
 #
 # DON'T FORGET TO RUN 'manage.py syncdb' AFTER SETTING UP A NEW DB!
 #
-DATABASE_ENGINE = '<%= @database_engine %>'
-DATABASE_NAME = '<%= @database[:name] %>'
-DATABASE_USER = '<%= @database[:user] %>'
-DATABASE_PASSWORD = '<%= @database[:password] %>'
-DATABASE_HOST = '<%= @database[:host] %>'
-DATABASE_PORT = '<%= @database[:port] %>'
+DATABASES = {
+    'default': {
+        'NAME': '<%= @database[:name] %>',
+        'ENGINE':  '<%= @database_engine %>',
+        'USER': '<%= @database[:user] %>',
+        'PASSWORD': '<%= @database[:password] %>',
+        'HOST': '<%= @database[:host] %>',
+        'PORT': '<%= @database[:port] %>'
+    }
+}
 <% end %>
 
 REMOTE_RENDERING = <%= @remote_rendering %>
@@ -106,9 +110,9 @@ CLUSTER_SERVERS = [<%= @cluster_servers.join(", ") %>]
 MEMCACHE_HOSTS = [<%= @memcache_hosts.join(", ") %>]
 <% end %>
 
-<% if @standard_dirs.empty? %>
-  <% else %>
-STANDARD_DIRS = [<%= @standard_dirs.join(", ") %>]
+<% if @data_dirs.empty? %>
+<% else %>
+DATA_DIRS = [<%= @data_dirs.join(", ") %>]
 <% end %>
 <% if @carbonlink_hosts.empty? %>
 <% else %>

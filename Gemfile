@@ -1,14 +1,15 @@
 source 'https://rubygems.org'
 
-gem 'rake'
-gem 'rspec'
-gem 'foodcritic'
-gem 'berkshelf'
-gem 'thor-foodcritic'
+group :test do
+  gem 'chef'
+  gem 'rspec'
+  gem 'foodcritic'
+end
 
 group :integration do
-  gem 'test-kitchen', :git => "git://github.com/opscode/test-kitchen.git"
-  gem 'kitchen-vagrant', :git => "git://github.com/opscode/kitchen-vagrant.git"
-  gem 'kitchen-ec2', :git => "git://github.com/opscode/kitchen-ec2.git"
-  gem 'kitchen-lxc', :git => "https://github.com/damm/kitchen-lxc.git"
+  gem 'berkshelf',       '~> 2.0'
+  gem 'test-kitchen',    '~> 1.0.0.beta'
+  gem 'kitchen-vagrant', '~> 0.11'
+  gem 'kitchen-lxc', :git => "https://github.com/portertech/kitchen-lxc.git", :tag => 'v0.0.1.beta2'
+  gem 'kitchen-docker', :git => "https://github.com/portertech/kitchen-docker.git", :tag => 'v0.10.0'
 end

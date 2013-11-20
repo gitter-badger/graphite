@@ -33,4 +33,10 @@ describe "graphite_test::relayplus" do
   it "should have a service called carbon-relay-a running" do
     service("carbon-relay-a").must_be_running
   end
+  it "should have /opt/graphite" do
+    directory("/opt/graphite").must_exist
+  end
+  it "should have /opt/graphite/bin/activate" do
+    file("/opt/graphite/bin/activate").must_exist
+  end
 end

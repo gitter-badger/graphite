@@ -93,7 +93,7 @@ go" => "1.3", "django-tagging" => "0.3.1", "simplejson" => "2.1.6", "Twisted" =>
 * `memcache_hosts` - Array
 * `rendering_hosts` - Array
 * `remote_rendering` - Aray
-* `standard_dirs` - String
+* `data_dirs` - String
 * `carbonlink_hosts` - Array
  
 Contributing

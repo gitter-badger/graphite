@@ -33,7 +33,7 @@ attribute :cluster_servers, :kind_of => Array, :default => Array.new
 attribute :memcache_hosts, :kind_of => Array, :default => Array.new
 attribute :rendering_hosts, :kind_of => Array, :default => Array.new
 attribute :remote_rendering, :kind_of => String, :default => "False"
-attribute :standard_dirs, :kind_of => Array, :default => Array.new
+attribute :data_dirs, :kind_of => Array, :default => Array.new
 attribute :carbonlink_hosts, :kind_of => Array, :default => Array.new
 
 def initialize(*args)

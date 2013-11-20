@@ -1,3 +1,7 @@
+def whyrun_supported?
+  true
+end
+
 use_inline_resources
 
 action :git do
@@ -134,7 +138,7 @@ action :create do
                 :memcache_hosts => new_resource.memcache_hosts,
                 :rendering_hosts => new_resource.rendering_hosts,
                 :remote_rendering => new_resource.remote_rendering,
-                :standard_dirs => new_resource.standard_dirs,
+                :data_dirs => new_resource.data_dirs,
                 :carbonlink_hosts => new_resource.carbonlink_hosts
               })
     mode 0655
