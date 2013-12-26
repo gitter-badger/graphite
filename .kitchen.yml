@@ -1,26 +1,25 @@
 ---
-driver_plugin: vagrant
-platforms: 
-- name: ubuntu-12.04
-  driver_config:
-    box: ubuntu-12.04
-    box_url: https://mopub-virtual-machines.s3.amazonaws.com/ubuntu-12.04.box
-    require_chef_omnibus: 11.4.0
-  run_list:
-  - recipe[apt]
-suites:
-- name: graphite
-  run_list: 
-  - recipe[minitest-handler]
-  - recipe[graphite_test::graphite]
-  attributes: {}
-- name: relayplus
-  run_list: 
-  - recipe[minitest-handler]
-  - recipe[graphite_test::relayplus]
-  attributes: {}
-- name: example
-  run_list:
-  - recipe[minitest-handler]
-  - recipe[graphite_test::example]
+driver:
+  name: vagrant
 
+provisioner:
+  name: chef_solo
+
+platforms:
+  - name: ubuntu-12.04
+  - name: centos-6.4
+
+suites:
+  - name: graphite
+    run_list:
+    - recipe[minitest-handler]
+    - recipe[graphite_test::graphite]
+    attributes:
+  - name: relayplus
+    run_list:
+    - recipe[graphite_test::relayplus]
+    attributes: 
+  - name: example
+    run_list:
+    - recipe[minitest-handler]
+    - recipe[graphite_test::example]
