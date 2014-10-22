@@ -1,5 +1,6 @@
 Description
 ===========
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/damm/graphite?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This cookbook provides resources and providers to install and configure [Graphite](http://graphite.wikidot.com/) Web Interface under [virtualenv](http://pypi.python.org/pypi/virtualenv).  Currently supported resources:
 
